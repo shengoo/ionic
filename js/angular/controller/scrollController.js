@@ -12,7 +12,6 @@ IonicModule
   '$document',
   '$ionicScrollDelegate',
   '$ionicHistory',
-  '$controller',
 function($scope,
          scrollViewOptions,
          $timeout,
@@ -20,8 +19,7 @@ function($scope,
          $location,
          $document,
          $ionicScrollDelegate,
-         $ionicHistory,
-         $controller) {
+         $ionicHistory) {
 
   var self = this;
   // for testing
@@ -85,6 +83,7 @@ function($scope,
 
   $timeout(function() {
     scrollView && scrollView.run && scrollView.run();
+    $element.triggerHandler('scroll.init');
   });
 
   self.getScrollView = function() {
@@ -158,9 +157,12 @@ function($scope,
     });
   };
 
-  self.freezeScroll = function(shouldFreeze) {
-    if (arguments.length) scrollView.options.freeze = shouldFreeze;
-    return scrollView.options.freeze;
+  self.freezeScroll = scrollView.freeze;
+
+  self.freezeAllScrolls = function(shouldFreeze) {
+    for (var i = 0; i < $ionicScrollDelegate._instances.length; i++) {
+      $ionicScrollDelegate._instances[i].freezeScroll(shouldFreeze);
+    }
   };
 
 

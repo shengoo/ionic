@@ -143,6 +143,23 @@
 
 
 /**
+ * Scrollable iFrames
+ * --------------------------------------------------
+ */
+
+.iframe-wrapper {
+  position: fixed;
+  -webkit-overflow-scrolling: touch;
+  overflow: scroll;
+
+  iframe {
+    height: 100%;
+    width: 100%;
+  }
+}
+
+
+/**
  * Rounded
  * --------------------------------------------------
  */
@@ -253,5 +270,16 @@
 [collection-repeat] {
   /* Position is set by transforms */
   left: 0 !important;
+  top: 0 !important;
   position: absolute !important;
+  z-index: 1;
+}
+.collection-repeat-container {
+  position: relative;
+}
+.collection-repeat-after-container {
+  z-index: 0;
+  &.horizontal {
+    display: inline-block;
+  }
 }

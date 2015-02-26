@@ -4,7 +4,7 @@
  * @module ionic
  * @delegate ionic.service:$ionicTabsDelegate
  * @restrict E
- * @codepen KbrzJ
+ * @codepen odqCz
  *
  * @description
  * Powers a multi-tabbed interface with a Tab Bar and a set of "pages" that can be tabbed
@@ -81,6 +81,18 @@ function($ionicTabsDelegate, $ionicConfig, $ionicHistory) {
           $scope.$hasTabs = !isTabsTop && !isHidden;
           $scope.$hasTabsTop = isTabsTop && !isHidden;
         });
+
+        function emitLifecycleEvent(ev, data) {
+          ev.stopPropagation();
+          var selectedTab = tabsCtrl.selectedTab();
+          if (selectedTab) {
+            selectedTab.$emit(ev.name.replace('NavView', 'View'), data);
+          }
+        }
+
+        $scope.$on('$ionicNavView.beforeLeave', emitLifecycleEvent);
+        $scope.$on('$ionicNavView.afterLeave', emitLifecycleEvent);
+        $scope.$on('$ionicNavView.leave', emitLifecycleEvent);
 
         $scope.$on('$destroy', function() {
           // variable to inform child tabs that they're all being blown away
