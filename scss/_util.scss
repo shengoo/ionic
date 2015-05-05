@@ -276,10 +276,21 @@
 }
 .collection-repeat-container {
   position: relative;
+  z-index: 1; //make sure it's above the after-container
 }
 .collection-repeat-after-container {
   z-index: 0;
+  display: block;
+
+  /* when scrolling horizontally, make sure the after container doesn't take up 100% width */
   &.horizontal {
     display: inline-block;
   }
+}
+
+// ng-show fix for windows phone
+// https://www.hoessl.eu/2014/12/on-using-the-ionic-framework-for-windows-phone-8-1-apps/
+[ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak,
+.x-ng-cloak, .ng-hide:not(.ng-hide-animate) {
+  display: none !important;
 }

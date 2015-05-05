@@ -1,7 +1,3 @@
-var ITEM_TPL_CONTENT_ANCHOR =
-  '<a class="item-content" ng-href="{{$href()}}" target="{{$target()}}"></a>';
-var ITEM_TPL_CONTENT =
-  '<div class="item-content"></div>';
 /**
 * @ngdoc directive
 * @name ionItem
@@ -28,8 +24,7 @@ var ITEM_TPL_CONTENT =
 * ```
 */
 IonicModule
-.directive('ionItem', function() {
-      var nextId = 0;
+.directive('ionItem', ['$$rAF', function($$rAF) {
   return {
     restrict: 'E',
     controller: ['$scope', '$element', function($scope, $element) {
@@ -46,32 +41,47 @@ IonicModule
         /ion-(delete|option|reorder)-button/i.test($element.html());
 
       if (isComplexItem) {
-        var innerElement = jqLite(isAnchor ? ITEM_TPL_CONTENT_ANCHOR : ITEM_TPL_CONTENT);
+        var innerElement = jqLite(isAnchor ? '<a></a>' : '<div></div>');
+        innerElement.addClass('item-content');
+
+        if (isDefined($attrs.href) || isDefined($attrs.ngHref)) {
+          innerElement.attr('ng-href', '{{$href()}}');
+          if (isDefined($attrs.target)) {
+            innerElement.attr('target', '{{$target()}}');
+          }
+        }
+
         innerElement.append($element.contents());
 
-        $element.append(innerElement);
-        $element.addClass('item item-complex');
+        $element.addClass('item item-complex')
+                .append(innerElement);
       } else {
         $element.addClass('item');
       }
 
       return function link($scope, $element, $attrs) {
-        var listCtrl;
         $scope.$href = function() {
           return $attrs.href || $attrs.ngHref;
         };
         $scope.$target = function() {
-          return $attrs.target || '_self';
+          return $attrs.target;
         };
 
         var content = $element[0].querySelector('.item-content');
         if (content) {
-          $scope.$on('$collectionRepeatChange', function() {
-            content && (content.style[ionic.CSS.TRANSFORM] = 'translate3d(0,0,0)');
+          $scope.$on('$collectionRepeatLeave', function() {
+            if (content && content.$$ionicOptionsOpen) {
+              content.style[ionic.CSS.TRANSFORM] = '';
+              content.style[ionic.CSS.TRANSITION] = 'none';
+              $$rAF(function() {
+                content.style[ionic.CSS.TRANSITION] = '';
+              });
+              content.$$ionicOptionsOpen = false;
+            }
           });
         }
       };
 
     }
   };
-});
+}]);

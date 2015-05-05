@@ -53,7 +53,7 @@ textarea {
 
   input {
     @include border-radius(0);
-    @include flex(1, 0, 220px);
+    @include flex(1, 220px);
     @include appearance(none);
     margin: 0;
     padding-right: 24px;
@@ -78,6 +78,10 @@ textarea {
   .icon {
     min-width: 14px;
   }
+}
+// prevent flex-shrink on WP
+.platform-windowsphone .item-input input{
+  flex-shrink: 1;
 }
 
 .item-input-inset {
@@ -110,7 +114,6 @@ textarea {
 }
 
 .input-label {
-  @include flex(1, 0, 100px);
   display: table;
   padding: 7px 10px 7px 0px;
   max-width: 200px;

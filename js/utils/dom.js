@@ -21,9 +21,9 @@
   // Put it on window just to preserve its context
   // without having to use .call
   window._rAF = (function() {
-    return window.requestAnimationFrame       ||
+    return window.requestAnimationFrame ||
            window.webkitRequestAnimationFrame ||
-           window.mozRequestAnimationFrame    ||
+           window.mozRequestAnimationFrame ||
            function(callback) {
              window.setTimeout(callback, 16);
            };
@@ -85,6 +85,14 @@
           });
         }
       };
+    },
+
+    contains: function(parentNode, otherNode) {
+      var current = otherNode;
+      while (current) {
+        if (current === parentNode) return true;
+        current = current.parentNode;
+      }
     },
 
     /**

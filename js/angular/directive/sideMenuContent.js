@@ -131,8 +131,8 @@ function($timeout, $ionicGesture, $window) {
 
         var content = {
           element: element[0],
-          onDrag: function(e) {},
-          endDrag: function(e) {},
+          onDrag: function() {},
+          endDrag: function() {},
           getTranslateX: function() {
             return $scope.sideMenuContentTranslateX || 0;
           },
@@ -154,7 +154,6 @@ function($timeout, $ionicGesture, $window) {
               $element[0].style.width = '';
               content.offsetX = 0;
             }
-            ionic.trigger('resize', null, window);
           }),
           setMarginRight: ionic.animationFrameThrottle(function(amount) {
             if (amount) {
@@ -183,6 +182,9 @@ function($timeout, $ionicGesture, $window) {
 
         // add gesture handlers
         var gestureOpts = { stop_browser_behavior: false };
+        if (ionic.DomUtil.getParentOrSelfWithClass($element[0], 'overflow-scroll')) {
+          gestureOpts.prevent_default_directions = ['left', 'right'];
+        }
         var contentTapGesture = $ionicGesture.on('tap', onContentTap, $element, gestureOpts);
         var dragRightGesture = $ionicGesture.on('dragright', onDragX, $element, gestureOpts);
         var dragLeftGesture = $ionicGesture.on('dragleft', onDragX, $element, gestureOpts);

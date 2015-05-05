@@ -157,29 +157,15 @@ describe('$ionicLoading service', function() {
     expect(loader.isShown).toBe(false);
     expect(loader.element.hasClass('active')).toBe(false);
   }));
-  it('show should only active after raf is still isShown', inject(function($ionicLoading) {
-    var loader = TestUtil.unwrapPromise($ionicLoading._getLoader());
-    var rafCallback;
-    ionic.requestAnimationFrame = function(cb) {
-      rafCallback = cb;
-    };
-    loader.show({});
-    expect(loader.isShown).toBe(true);
-    loader.hide();
-    expect(loader.isShown).toBe(false);
-    rafCallback();
-    expect(loader.element.hasClass('active')).toBe(false);
-    ionic.requestAnimationFrame = function(cb) { cb(); };
-  }));
 
   describe("back button", function() {
-    it('.show() should register back button action', inject(function($ionicLoading, $ionicPlatform, $timeout) {
+    it('.show() should register back button action', inject(function($ionicLoading, $ionicPlatform, $timeout, IONIC_BACK_PRIORITY) {
       spyOn($ionicPlatform, 'registerBackButtonAction');
       $ionicLoading.show();
       $timeout.flush();
       expect($ionicPlatform.registerBackButtonAction).toHaveBeenCalledWith(
         angular.noop,
-        PLATFORM_BACK_BUTTON_PRIORITY_LOADING
+        IONIC_BACK_PRIORITY.loading
       );
     }));
     it('.hide() should deregister back button action', inject(function($ionicLoading, $ionicPlatform, $timeout) {
@@ -194,7 +180,7 @@ describe('$ionicLoading service', function() {
     }));
   });
 
-  it('should use options.hideOnStateChange', inject(function($ionicLoading, $rootScope, $timeout) {
+  it('should use options.hideOnStateChange to hide on $stateChangeSuccess', inject(function($ionicLoading, $rootScope, $timeout) {
     var loader = TestUtil.unwrapPromise($ionicLoading._getLoader());
     $ionicLoading.show({
       hideOnStateChange: true,
@@ -202,6 +188,18 @@ describe('$ionicLoading service', function() {
     });
     spyOn(loader, 'hide');
     $rootScope.$broadcast('$stateChangeSuccess');
+    $rootScope.$apply();
+    expect(loader.hide).toHaveBeenCalled();
+  }));
+
+  it('should use options.hideOnStateChange to hide on $stateChangeError', inject(function($ionicLoading, $rootScope, $timeout) {
+    var loader = TestUtil.unwrapPromise($ionicLoading._getLoader());
+    $ionicLoading.show({
+      hideOnStateChange: true,
+      template: ''
+    });
+    spyOn(loader, 'hide');
+    $rootScope.$broadcast('$stateChangeError');
     $rootScope.$apply();
     expect(loader.hide).toHaveBeenCalled();
   }));

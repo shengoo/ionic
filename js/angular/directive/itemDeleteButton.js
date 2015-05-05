@@ -31,9 +31,14 @@ var ITEM_TPL_DELETE_BUTTON =
 */
 IonicModule
 .directive('ionDeleteButton', function() {
+
+  function stopPropagation(ev) {
+    ev.stopPropagation();
+  }
+
   return {
     restrict: 'E',
-    require: ['^ionItem', '^?ionList'],
+    require: ['^^ionItem', '^?ionList'],
     //Run before anything else, so we can move it before other directives process
     //its location (eg ngIf relies on the location of the directive in the dom)
     priority: Number.MAX_VALUE,
@@ -48,8 +53,16 @@ IonicModule
         container.append($element);
         itemCtrl.$element.append(container).addClass('item-left-editable');
 
-        if (listCtrl && listCtrl.showDelete()) {
-          container.addClass('visible active');
+        //Don't bubble click up to main .item
+        $element.on('click', stopPropagation);
+
+        init();
+        $scope.$on('$ionic.reconnectScope', init);
+        function init() {
+          listCtrl = listCtrl || $element.controller('ionList');
+          if (listCtrl && listCtrl.showDelete()) {
+            container.addClass('visible active');
+          }
         }
       };
     }

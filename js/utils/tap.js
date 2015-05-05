@@ -162,12 +162,20 @@ ionic.tap = {
     return !!ele &&
            (ele.tagName == 'TEXTAREA' ||
             ele.contentEditable === 'true' ||
-            (ele.tagName == 'INPUT' && !(/^(radio|checkbox|range|file|submit|reset)$/i).test(ele.type)));
+            (ele.tagName == 'INPUT' && !(/^(radio|checkbox|range|file|submit|reset|color|image|button)$/i).test(ele.type)));
   },
 
   isDateInput: function(ele) {
     return !!ele &&
             (ele.tagName == 'INPUT' && (/^(date|time|datetime-local|month|week)$/i).test(ele.type));
+  },
+
+  isKeyboardElement: function(ele) {
+    if ( !ionic.Platform.isIOS() || ionic.Platform.isIPad() ) {
+      return ionic.tap.isTextInput(ele) && !ionic.tap.isDateInput(ele);
+    } else {
+      return ionic.tap.isTextInput(ele) || ( !!ele && ele.tagName == "SELECT");
+    }
   },
 
   isLabelWithTextInput: function(ele) {
@@ -181,7 +189,7 @@ ionic.tap = {
     return ionic.tap.isTextInput(ele) || ionic.tap.isLabelWithTextInput(ele);
   },
 
-  cloneFocusedInput: function(container, scrollIntance) {
+  cloneFocusedInput: function(container) {
     if (ionic.tap.hasCheckedClone) return;
     ionic.tap.hasCheckedClone = true;
 
@@ -189,7 +197,7 @@ ionic.tap = {
       var focusInput = container.querySelector(':focus');
       if (ionic.tap.isTextInput(focusInput)) {
         var clonedInput = focusInput.cloneNode(true);
-        
+
         clonedInput.value = focusInput.value;
         clonedInput.classList.add('cloned-text-input');
         clonedInput.readOnly = true;
@@ -207,7 +215,7 @@ ionic.tap = {
 
   hasCheckedClone: false,
 
-  removeClonedInputs: function(container, scrollIntance) {
+  removeClonedInputs: function(container) {
     ionic.tap.hasCheckedClone = false;
 
     ionic.requestAnimationFrame(function() {
@@ -222,7 +230,7 @@ ionic.tap = {
       for (x = 0; x < previousInputFocus.length; x++) {
         previousInputFocus[x].classList.remove('previous-input-focus');
         previousInputFocus[x].style.top = '';
-        previousInputFocus[x].focus();
+        if ( ionic.keyboard.isOpen && !ionic.keyboard.isClosing ) previousInputFocus[x].focus();
       }
     });
   },
@@ -269,7 +277,7 @@ ionic.tap = {
   pointerCoord: function(event) {
     // This method can get coordinates for both a mouse click
     // or a touch depending on the given event
-    var c = { x:0, y:0 };
+    var c = { x: 0, y: 0 };
     if (event) {
       var touches = event.touches && event.touches.length ? event.touches : [event];
       var e = (event.changedTouches && event.changedTouches[0]) || touches[0];
@@ -316,9 +324,10 @@ function triggerMouseEvent(type, ele, x, y) {
 }
 
 function tapClickGateKeeper(e) {
+  //console.log('click ' + Date.now() + ' isIonicTap: ' + (e.isIonicTap ? true : false));
   if (e.target.type == 'submit' && e.detail === 0) {
     // do not prevent click if it came from an "Enter" or "Go" keypress submit
-    return;
+    return null;
   }
 
   // do not allow through any click events that were not created by ionic.tap
@@ -337,7 +346,8 @@ function tapClickGateKeeper(e) {
 
 // MOUSE
 function tapMouseDown(e) {
-  if (e.isIonicTap || tapIgnoreEvent(e)) return;
+  //console.log('mousedown ' + Date.now());
+  if (e.isIonicTap || tapIgnoreEvent(e)) return null;
 
   if (tapEnabledTouchEvents) {
     console.log('mousedown', 'stop event');
@@ -362,6 +372,7 @@ function tapMouseDown(e) {
 }
 
 function tapMouseUp(e) {
+  //console.log("mouseup " + Date.now());
   if (tapEnabledTouchEvents) {
     e.stopPropagation();
     e.preventDefault();
@@ -390,6 +401,7 @@ function tapMouseMove(e) {
 
 // TOUCH
 function tapTouchStart(e) {
+  //console.log("touchstart " + Date.now());
   if (tapIgnoreEvent(e)) return;
 
   tapPointerMoved = false;
@@ -415,6 +427,7 @@ function tapTouchStart(e) {
 }
 
 function tapTouchEnd(e) {
+  //console.log('touchend ' + Date.now());
   if (tapIgnoreEvent(e)) return;
 
   tapEnableTouchEvents();
@@ -439,7 +452,7 @@ function tapTouchMove(e) {
   }
 }
 
-function tapTouchCancel(e) {
+function tapTouchCancel() {
   tapEventListener(tapTouchMoveListener, false);
   ionic.activator.end();
   tapPointerMoved = false;
@@ -450,7 +463,7 @@ function tapEnableTouchEvents() {
   clearTimeout(tapMouseResetTimer);
   tapMouseResetTimer = setTimeout(function() {
     tapEnabledTouchEvents = false;
-  }, 2000);
+  }, 600);
 }
 
 function tapIgnoreEvent(e) {
@@ -508,8 +521,9 @@ function tapFocusOutActive() {
 }
 
 function tapFocusIn(e) {
+  //console.log('focusin ' + Date.now());
   // Because a text input doesn't preventDefault (so the caret still works) there's a chance
-  // that it's mousedown event 300ms later will change the focus to another element after
+  // that its mousedown event 300ms later will change the focus to another element after
   // the keyboard shows up.
 
   if (tapEnabledTouchEvents &&
@@ -529,6 +543,7 @@ function tapFocusIn(e) {
 }
 
 function tapFocusOut() {
+  //console.log("focusout");
   tapActiveElement(null);
 }
 

@@ -40,7 +40,7 @@
    *   var currentPlatform = ionic.Platform.platform();
    *   var currentPlatformVersion = ionic.Platform.version();
    *
-   *   ionic.Platform.exit(); // stops the app
+   *   ionic.Platform.exitApp(); // stops the app
    * });
    * ```
    */
@@ -150,7 +150,11 @@
 
       if (self.isWebView()) {
         self.platforms.push('webview');
-        self.platforms.push('cordova');
+        if (!(!window.cordova && !window.PhoneGap && !window.phonegap)) {
+          self.platforms.push('cordova');
+        } else if (window.forge) {
+          self.platforms.push('trigger');
+        }
       } else {
         self.platforms.push('browser');
       }
@@ -188,7 +192,7 @@
      * @returns {boolean} Check if we are running within a WebView (such as Cordova).
      */
     isWebView: function() {
-      return !(!window.cordova && !window.PhoneGap && !window.phonegap);
+      return !(!window.cordova && !window.PhoneGap && !window.phonegap && !window.forge);
     },
     /**
      * @ngdoc method
@@ -291,7 +295,7 @@
       };
       if (versionMatch[pName]) {
         v = self.ua.match(versionMatch[pName]);
-        if (v &&  v.length > 2) {
+        if (v && v.length > 2) {
           platformVersion = parseFloat(v[1] + '.' + v[2]);
         }
       }
@@ -330,7 +334,7 @@
     /**
      * @ngdoc method
      * @name ionic.Platform#showStatusBar
-     * @description Shows or hides the device status bar (in Cordova).
+     * @description Shows or hides the device status bar (in Cordova). Requires `cordova plugin add org.apache.cordova.statusbar`
      * @param {boolean} shouldShow Whether or not to show the status bar.
      */
     showStatusBar: function(val) {
@@ -357,7 +361,7 @@
      * @name ionic.Platform#fullScreen
      * @description
      * Sets whether the app is fullscreen or not (in Cordova).
-     * @param {boolean=} showFullScreen Whether or not to set the app to fullscreen. Defaults to true.
+     * @param {boolean=} showFullScreen Whether or not to set the app to fullscreen. Defaults to true. Requires `cordova plugin add org.apache.cordova.statusbar`
      * @param {boolean=} showStatusBar Whether or not to show the device's status bar. Defaults to false.
      */
     fullScreen: function(showFullScreen, showStatusBar) {
@@ -368,11 +372,6 @@
       ionic.DomUtil.ready(function() {
         // run this only when or if the DOM is ready
         requestAnimationFrame(function() {
-          // fixing pane height before we adjust this
-          var panes = document.getElementsByClassName('pane');
-          for (var i = 0; i < panes.length; i++) {
-            panes[i].style.height = panes[i].offsetHeight + "px";
-          }
           if (self.isFullScreen) {
             document.body.classList.add('fullscreen');
           } else {

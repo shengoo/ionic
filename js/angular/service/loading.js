@@ -67,12 +67,14 @@ IonicModule
   '$compile',
   '$ionicPlatform',
   '$rootScope',
-function($ionicLoadingConfig, $ionicBody, $ionicTemplateLoader, $ionicBackdrop, $timeout, $q, $log, $compile, $ionicPlatform, $rootScope) {
+  'IONIC_BACK_PRIORITY',
+function($ionicLoadingConfig, $ionicBody, $ionicTemplateLoader, $ionicBackdrop, $timeout, $q, $log, $compile, $ionicPlatform, $rootScope, IONIC_BACK_PRIORITY) {
 
   var loaderInstance;
   //default values
   var deregisterBackAction = noop;
-  var deregisterStateListener = noop;
+  var deregisterStateListener1 = noop;
+  var deregisterStateListener2 = noop;
   var loadingShowDelay = $q.when();
 
   return {
@@ -141,7 +143,7 @@ function($ionicLoadingConfig, $ionicBody, $ionicTemplateLoader, $ionicBackdrop, 
           //Disable hardware back button while loading
           deregisterBackAction = $ionicPlatform.registerBackButtonAction(
             noop,
-            PLATFORM_BACK_BUTTON_PRIORITY_LOADING
+            IONIC_BACK_PRIORITY.loading
           );
 
           templatePromise.then(function(html) {
@@ -193,9 +195,11 @@ function($ionicLoadingConfig, $ionicBody, $ionicTemplateLoader, $ionicBackdrop, 
     options = extend({}, $ionicLoadingConfig || {}, options || {});
     var delay = options.delay || options.showDelay || 0;
 
-    deregisterStateListener();
+    deregisterStateListener1();
+    deregisterStateListener2();
     if (options.hideOnStateChange) {
-      deregisterStateListener = $rootScope.$on('$stateChangeSuccess', hideLoader);
+      deregisterStateListener1 = $rootScope.$on('$stateChangeSuccess', hideLoader);
+      deregisterStateListener2 = $rootScope.$on('$stateChangeError', hideLoader);
     }
 
     //If loading.show() was called previously, cancel it and show with our new options
@@ -206,20 +210,26 @@ function($ionicLoadingConfig, $ionicBody, $ionicTemplateLoader, $ionicBackdrop, 
     });
 
     return {
-      hide: deprecated.method(LOADING_HIDE_DEPRECATED, $log.error, hideLoader),
-      show: deprecated.method(LOADING_SHOW_DEPRECATED, $log.error, function() {
-        showLoader(options);
-      }),
-      setContent: deprecated.method(LOADING_SET_DEPRECATED, $log.error, function(content) {
-        getLoader().then(function(loader) {
+      hide: function deprecatedHide() {
+        $log.error(LOADING_HIDE_DEPRECATED);
+        return hideLoader.apply(this, arguments);
+      },
+      show: function deprecatedShow() {
+        $log.error(LOADING_SHOW_DEPRECATED);
+        return showLoader.apply(this, arguments);
+      },
+      setContent: function deprecatedSetContent(content) {
+        $log.error(LOADING_SET_DEPRECATED);
+        return getLoader().then(function(loader) {
           loader.show({ template: content });
         });
-      })
+      }
     };
   }
 
   function hideLoader() {
-    deregisterStateListener();
+    deregisterStateListener1();
+    deregisterStateListener2();
     $timeout.cancel(loadingShowDelay);
     getLoader().then(function(loader) {
       loader.hide();

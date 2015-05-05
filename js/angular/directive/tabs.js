@@ -15,7 +15,7 @@
  *
  * For iOS, tabs will appear at the bottom of the screen. For Android, tabs will be at the top
  * of the screen, below the nav-bar. This follows each OS's design specification, but can be
- * configured with the [$ionicConfigProvider](docs/api/provider/$ionicConfigProvider/).
+ * configured with the {@link ionic.provider:$ionicConfigProvider}.
  *
  * See the {@link ionic.directive:ionTab} directive's documentation for more details on
  * individual tabs.
@@ -50,8 +50,7 @@ IonicModule
 .directive('ionTabs', [
   '$ionicTabsDelegate',
   '$ionicConfig',
-  '$ionicHistory',
-function($ionicTabsDelegate, $ionicConfig, $ionicHistory) {
+function($ionicTabsDelegate, $ionicConfig) {
   return {
     restrict: 'E',
     scope: true,
@@ -80,13 +79,14 @@ function($ionicTabsDelegate, $ionicConfig, $ionicHistory) {
           var isHidden = value.indexOf('tabs-item-hide') !== -1;
           $scope.$hasTabs = !isTabsTop && !isHidden;
           $scope.$hasTabsTop = isTabsTop && !isHidden;
+          $scope.$emit('$ionicTabs.top', $scope.$hasTabsTop);
         });
 
         function emitLifecycleEvent(ev, data) {
           ev.stopPropagation();
-          var selectedTab = tabsCtrl.selectedTab();
-          if (selectedTab) {
-            selectedTab.$emit(ev.name.replace('NavView', 'View'), data);
+          var previousSelectedTab = tabsCtrl.previousSelectedTab();
+          if (previousSelectedTab) {
+            previousSelectedTab.$broadcast(ev.name.replace('NavView', 'Tabs'), data);
           }
         }
 
